@@ -36,6 +36,12 @@ class BudgetItem(BaseModel):
     amount: float
     kind: str
 
+class Loan(BaseModel):
+    name: str
+    amount: float
+    rate: float
+    payment: float
+
 class BudgetDB:
     def __init__(self):
         self.engine = create_engine("sqlite:///budget.db")
@@ -49,6 +55,17 @@ class BudgetDB:
             Column("name", String),
             Column("amount", Float),
             Column("kind", String),
+        )
+
+        self.loans = Table(
+            "loans",
+            self.metadata_obj,
+            Column("id", Integer, primary_key=True),
+            Column("username", String),
+            Column("name", String),
+            Column("amount", Float),
+            Column("rate", Float),
+            Column("payment", Float),
         )
 
         self.degrees = Table(
@@ -89,6 +106,29 @@ class BudgetDB:
             conn.execute(statement)
             conn.commit()
 
+    def get_loans(self, username):
+        statement = select(self.loans).where(self.loans.c.username == username)
+        with self.engine.connect() as conn:
+            rows = conn.execute(statement).all()
+        data = []
+        for row in rows:
+            data.append({"id": row.id, "name": row.name, "amount": row.amount, "rate": row.rate, "payment": row.payment})
+        return data
+
+    def add_loan(self, username, loan):
+        statement = insert(self.loans).values(
+            username=username, name=loan.name, amount=loan.amount, rate=loan.rate, payment=loan.payment
+        )
+        with self.engine.connect() as conn:
+            conn.execute(statement)
+            conn.commit()
+
+    def delete_loan(self, username, loan_id):
+        statement = delete(self.loans).where(self.loans.c.username == username).where(self.loans.c.id == loan_id)
+        with self.engine.connect() as conn:
+            conn.execute(statement)
+            conn.commit()
+
     def get_degrees(self):
         statement = select(self.degrees)
         with self.engine.connect() as conn:
@@ -115,6 +155,20 @@ def add_budget_item(username: str, item: BudgetItem):
 def delete_budget_item(username: str, item_id: int):
     db.delete_item(username, item_id)
     return db.get_items(username)
+
+@app.get("/loans/{username}")
+def read_loans(username: str):
+    return db.get_loans(username)
+
+@app.post("/loans/{username}")
+def add_loan(username: str, loan: Loan):
+    db.add_loan(username, loan)
+    return db.get_loans(username)
+
+@app.delete("/loans/{username}/{loan_id}")
+def delete_loan(username: str, loan_id: int):
+    db.delete_loan(username, loan_id)
+    return db.get_loans(username)
 
 @app.get("/degrees")
 def read_degrees():
