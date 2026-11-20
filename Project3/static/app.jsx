@@ -19,12 +19,18 @@ const deleteBudgetItem = async (username, itemId) => {
     return await response.json();
 };
 
+const fetchDegree = async () => {
+    const response = await fetch(`/degrees`);
+    return await response.json();
+};
+
 function BudgetApp(){
     const [username, setUsername] = React.useState("");
     const [items, setItems] = React.useState([]);
     const [name, setName] = React.useState("");
     const [amount, setAmount] = React.useState("");
     const [kind, setKind] = React.useState("expense");
+    const [degree,setDegree] = React.useState("degree");
 
     const handleUpdateUsername = (evt) => {
         setUsername(evt.target.value);
@@ -42,10 +48,15 @@ function BudgetApp(){
         setKind(evt.target.value);
     };
 
+    const handleUpdateDegree = (evt) => {
+        setDegree(evt.target.value);
+    }
+
     const handleFetchBudget = async () => {
         const fetchedData = await fetchBudget(username);
         setItems(fetchedData);
     };
+
 
     const handleAddBudgetItem = async (item) => {
         const fetchedData = await addBudgetItem(username,item);
@@ -63,6 +74,10 @@ function BudgetApp(){
         setName("");
         setAmount("");
     };
+
+    const handleFetchDegree = async () => {
+        const fetchedData = await fetchDegree
+    }
 
     const budgetJSX = items.map((item) => {
         const deleteFunction = () => handleDeleteBudgetItem(item.id);
@@ -117,6 +132,15 @@ function BudgetApp(){
                     <option value="whatif">What if</option>
                 </select>
                 <button onClick={handleSubmit}>Add</button>
+            </div>
+
+            <div>
+                <label htmlFor="degree">Degree:</label>
+                <select id="degree" value={degree} onChange={handleUpdateDegree}>
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                    <option value="whatif">What if</option>
+                </select>
             </div>
 
             <div>

@@ -98,6 +98,7 @@ class BudgetDB:
             data.append({"degree": row.degree, "early": row.early, "mid": row.mid})
         return data
 
+
 app = FastAPI()
 db = BudgetDB()
 
